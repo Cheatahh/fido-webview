@@ -22,6 +22,7 @@ class FidoWebview : CordovaPlugin() {
         "log" -> {
             val message = requireNotNull(args.optString(0).takeIf(String::isNotBlank))
             Log.d("FidoWebview", message)
+            true
         }
         else -> false
     }
