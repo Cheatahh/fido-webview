@@ -22,11 +22,6 @@
             </feature>
         </config-file>
 
-        <config-file target="gradle.properties" parent="/*">
-            <string name="android.useAndroidX">true</string>
-            <string name="android.enableJetifier">true</string>
-        </config-file>
-
         <source-file src="src/android/FidoWebview.kt" target-dir="src/com/fkmit/fido"/>
 
     </platform>
