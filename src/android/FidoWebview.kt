@@ -5,6 +5,7 @@ import org.apache.cordova.CordovaPlugin
 import org.apache.cordova.PluginResult
 import org.json.JSONArray
 import org.json.JSONObject
+import android.util.Log
 
 enum class StatusCodes(val code: Int, val resultStatus: PluginResult.Status) {
     Success(1, PluginResult.Status.OK),
@@ -17,6 +18,10 @@ class FidoWebview : CordovaPlugin() {
         "getAssertion" -> {
             executeGetAssertion(args)
             true
+        }
+        "log" -> {
+            val message = requireNotNull(args.optString(0).takeIf(String::isNotBlank))
+            Log.d("FidoWebview", message)
         }
         else -> false
     }

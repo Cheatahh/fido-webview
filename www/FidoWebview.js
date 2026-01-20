@@ -16,6 +16,9 @@ const FidoWebview = {
         } catch(err) {
             onStatusChanged(this.StatusCodes.FAILURE, err);
         }
+    },
+    log: function(message) {
+        exec(() => {}, () => {}, 'FidoWebview', 'log', [message]);
     }
 };
 
