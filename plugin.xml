@@ -12,15 +12,24 @@
 
     <platform name="android">
 
-        <preference name="GradlePluginKotlinEnabled" value="true" />
-        <preference name="AndroidXEnabled" value="true" />
+        <framework
+            src="org.jetbrains.kotlin:kotlin-gradle-plugin:2.3.0"
+            type="gradle"
+            custom="true" />
 
-        <framework src="org.jetbrains.kotlin:kotlin-stdlib-jdk8:2.3.0" type="gradle" />
+        <framework
+            src="org.jetbrains.kotlin:kotlin-stdlib-jdk8:2.3.0"
+            type="gradle" />
 
         <config-file target="res/xml/config.xml" parent="/*">
             <feature name="FidoWebview">
                 <param name="android-package" value="com.fkmit.fido.FidoWebview"/>
             </feature>
+        </config-file>
+
+        <config-file target="gradle.properties" parent="/*">
+            <string name="android.useAndroidX">true</string>
+            <string name="android.enableJetifier">true</string>
         </config-file>
 
         <source-file src="src/android/FidoWebview.kt" target-dir="src/com/fkmit/fido"/>
