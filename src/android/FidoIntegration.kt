@@ -17,8 +17,6 @@ import com.yubico.yubikit.android.transport.nfc.NfcYubiKeyManager
 import com.yubico.yubikit.android.transport.usb.UsbConfiguration
 import com.yubico.yubikit.android.transport.usb.UsbYubiKeyManager
 import com.yubico.yubikit.core.YubiKeyDevice
-import kotlin.concurrent.atomics.AtomicReference
-import kotlin.concurrent.atomics.ExperimentalAtomicApi
 
 private const val NFC_TIMEOUT = 5000
 
@@ -43,7 +41,7 @@ class FidoIntegration : CordovaPlugin(), NFCDiscoveryDispatcher {
                 }
             })
         if(yubikit === null)
-            yubikit = YubiKitManager(UsbYubiKeyManager(this), nfcManager)
+            yubikit = YubiKitManager(UsbYubiKeyManager(cordova.activity), nfcManager)
     }
 
     override fun execute(action: String, args: JSONArray, callback: CallbackContext): Boolean {
@@ -72,7 +70,7 @@ class FidoIntegration : CordovaPlugin(), NFCDiscoveryDispatcher {
     override fun startDeviceDiscovery(callback: (YubiKeyDevice) -> Unit) {
         synchronized(this) {
             yubikitDiscovery = callback
-            yubikit?.startNfcDiscovery(NfcConfiguration().timeout(NFC_TIMEOUT), this) { device ->
+            yubikit?.startNfcDiscovery(NfcConfiguration().timeout(NFC_TIMEOUT), cordova.activity) { device ->
                 callback(device)
             }
             yubikit?.startUsbDiscovery(UsbConfiguration()) { device ->
@@ -84,18 +82,18 @@ class FidoIntegration : CordovaPlugin(), NFCDiscoveryDispatcher {
     override fun stopDeviceDiscovery() {
         synchronized(this) {
             yubikitDiscovery = null
-            yubikit?.stopNfcDiscovery(this)
+            yubikit?.stopNfcDiscovery(cordova.activity)
             yubikit?.stopUsbDiscovery()
         }
     }
 
     override fun onResume(multitasking: Boolean) {
         yubikitDiscovery?.apply(::startDeviceDiscovery)
-        super.onResume()
+        super.onResume(multitasking)
     }
 
     override fun onPause(multitasking: Boolean) {
         stopDeviceDiscovery()
-        super.onPause()
+        super.onPause(multitasking)
     }
 }
