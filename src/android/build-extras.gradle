@@ -1,17 +1,10 @@
-ext {
-    kotlin_version = project.findProperty('KOTLIN_VERSION') ?: '1.9.24'
-    compose_compiler_version = project.findProperty('COMPOSE_COMPILER_VERSION') ?: '1.5.15'
-    compose_bom_version = project.findProperty('COMPOSE_BOM_VERSION') ?: '2024.12.01'
-    yubikit_version = project.findProperty('YUBIKIT_VERSION') ?: '3.0.0'
-}
-
 buildscript {
     repositories {
         google()
         mavenCentral()
     }
     dependencies {
-        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:${project.ext.kotlin_version}"
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:${project.findProperty('KOTLIN_VERSION') ?: '1.9.24'}"
     }
 }
 
@@ -24,16 +17,16 @@ repositories {
 }
 
 dependencies {
-    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:${project.ext.kotlin_version}"
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:${project.findProperty('KOTLIN_VERSION') ?: '1.9.24'}"
 
-    implementation platform("androidx.compose:compose-bom:${project.ext.compose_bom_version}")
+    implementation platform("androidx.compose:compose-bom:${project.findProperty('COMPOSE_BOM_VERSION') ?: '2024.12.01'}")
 
     implementation 'androidx.compose.ui:ui'
     implementation 'androidx.compose.ui:ui-tooling-preview'
     implementation 'androidx.compose.material3:material3'
 
-    implementation "com.yubico.yubikit:fido:${project.ext.yubikit_version}"
-    implementation "com.yubico.yubikit:android:${project.ext.yubikit_version}"
+    implementation "com.yubico.yubikit:fido:${project.findProperty('YUBIKIT_VERSION') ?: '3.0.0'}"
+    implementation "com.yubico.yubikit:android:${project.findProperty('YUBIKIT_VERSION') ?: '3.0.0'}"
 }
 
 android {
@@ -41,7 +34,7 @@ android {
         compose true
     }
     composeOptions {
-        kotlinCompilerExtensionVersion = compose_compiler_version
+        kotlinCompilerExtensionVersion = project.findProperty('COMPOSE_COMPILER_VERSION') ?: '1.5.15'
     }
     sourceSets {
         main.java.srcDirs += 'src/main/kotlin'
