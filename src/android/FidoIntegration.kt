@@ -2,6 +2,7 @@ package com.fkmit.fido
 
 import android.app.Activity
 import android.nfc.NfcAdapter
+import android.util.Log
 import com.yubico.yubikit.android.YubiKitManager
 import com.yubico.yubikit.android.transport.nfc.NfcConfiguration
 import com.yubico.yubikit.android.transport.nfc.NfcDispatcher
@@ -24,6 +25,7 @@ class FidoIntegration : CordovaPlugin(), NFCDiscoveryDispatcher {
     override var currentNFCDevice: YubiKeyDevice? = null
 
     private fun ensureYubikitInitialized() {
+        Log.d("FIDO", "Loading Yubikit")
         if(nfcYubikeyManager === null)
             nfcYubikeyManager = NfcYubiKeyManager(cordova.activity, object : NfcDispatcher {
                 private var nfcAdapter: NfcAdapter? = null
@@ -39,30 +41,34 @@ class FidoIntegration : CordovaPlugin(), NFCDiscoveryDispatcher {
             })
         if(yubikitManager === null)
             yubikitManager = YubiKitManager(UsbYubiKeyManager(cordova.activity), nfcYubikeyManager)
+        Log.d("FIDO", "Yubikit Loaded")
     }
 
     override fun execute(action: String, args: JSONArray, callback: CallbackContext): Boolean {
+        Log.d("FIDO", "Request $action")
         val dispatch = ResultDispatcher(callback)
         runCatching {
             when(action) {
                 "getAssertion" -> RequestHandlers.getAssertion(args, this@FidoIntegration, dispatch)
                 "reset" -> {
                     stopDeviceDiscovery()
-                    dispatch.sendStatusResult(StatusCodes.Success, null)
+                    dispatch.sendMessage(MessageCodes.Success, null)
                 }
                 else -> return false
             }
         }.onFailure { error ->
-            dispatch.sendStatusResult(StatusCodes.Failure, error)
+            dispatch.sendMessage(MessageCodes.Failure, error)
         }
         return true
     }
 
     override fun startDeviceDiscovery(callback: (YubiKeyDevice) -> Unit) {
+        Log.d("FIDO", "Start Discovery")
         synchronized(this) {
             ensureYubikitInitialized()
             yubikitDiscoveryCallback = callback
             yubikitManager?.startNfcDiscovery(NfcConfiguration().timeout(NFC_TIMEOUT), cordova.activity) { device ->
+                Log.d("FIDO", "Got Device")
                 stopDeviceDiscovery()
                 currentNFCDevice = device
                 callback(device)
@@ -76,6 +82,7 @@ class FidoIntegration : CordovaPlugin(), NFCDiscoveryDispatcher {
     }
 
     override fun stopDeviceDiscovery() {
+        Log.d("FIDO", "Stop Discovery")
         synchronized(this) {
             yubikitDiscoveryCallback = null
             yubikitManager?.stopNfcDiscovery(cordova.activity)

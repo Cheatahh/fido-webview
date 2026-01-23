@@ -1,14 +1,14 @@
 const exec = require('cordova/exec');
 
-function runExecCatching(onStatusChanged, action, parameters) {
+function runExecCatching(onMessage, action, parameters) {
     try {
         exec((result) => {
-            onStatusChanged(result.statusCode, result.payload);
+            onMessage(result.statusCode, result.payload);
         }, (err) => {
-            onStatusChanged(this.StatusCodes.FAILURE, err);
+            onMessage(this.StatusCodes.FAILURE, err);
         }, 'FidoIntegration', action, parameters);
     } catch(err) {
-        onStatusChanged(this.StatusCodes.FAILURE, err);
+        onMessage(this.StatusCodes.FAILURE, err);
     }
 }
 
@@ -21,11 +21,11 @@ const FidoIntegration = {
         SIGNAL_DEVICE_DISCOVERED: 0x3002, // payload: null
         SIGNAL_DEVICE_LOST: 0x3003, // payload: null
     },
-    getAssertion: function(clientData /*json string*/, userPin /*string*/, rpId /*url string*/, userId /*base64 string*/, onStatusChanged /*callback (code, payload) -> void*/) {
-        runExecCatching(onStatusChanged, 'getAssertion', [clientData, userPin, rpId, userId]);
+    getAssertion: function(clientData /*json string*/, userPin /*string*/, rpId /*url string*/, userId /*base64 string*/, onMessage /*callback (code, payload) -> void*/) {
+        runExecCatching(onMessage, 'getAssertion', [clientData, userPin, rpId, userId]);
     },
-    reset: function(onStatusChanged /*callback (code, payload) -> void*/) {
-        runExecCatching(onStatusChanged, 'reset', []);
+    reset: function(onMessage /*callback (code, payload) -> void*/) {
+        runExecCatching(onMessage, 'reset', []);
     }
 };
 

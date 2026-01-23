@@ -13,17 +13,17 @@ interface NFCDiscoveryDispatcher {
 
     fun useDeviceConnection(dispatch: ResultDispatcher, callback: (SmartCardConnection) -> Unit) {
         runCatching {
-            dispatch.sendStatusResult(StatusCodes.SignalDeviceDiscovered, null)
+            dispatch.sendMessage(MessageCodes.SignalDeviceDiscovered, null)
             requireNotNull(currentNFCDevice).openConnection(SmartCardConnection::class.java)
         }.onSuccess { connection ->
             connection.use(callback)
         }.onFailure {
             if(currentNFCDevice != null) {
                 currentNFCDevice = null
-                dispatch.sendStatusResult(StatusCodes.SignalDeviceLost, null)
+                dispatch.sendMessage(MessageCodes.SignalDeviceLost, null)
             }
             startDeviceDiscovery { device ->
-                dispatch.sendStatusResult(StatusCodes.SignalDeviceDiscovered, null)
+                dispatch.sendMessage(MessageCodes.SignalDeviceDiscovered, null)
                 device.openConnection(SmartCardConnection::class.java).use(callback)
             }
         }
