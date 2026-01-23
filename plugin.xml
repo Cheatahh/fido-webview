@@ -36,10 +36,10 @@
         <source-file src="src/android/Fido.kt" target-dir="app/src/main/kotlin/com/fkmit/fido"/>
         <source-file src="src/android/FidoCredential.kt" target-dir="app/src/main/kotlin/com/fkmit/fido"/>
         <source-file src="src/android/FidoIntegration.kt" target-dir="app/src/main/kotlin/com/fkmit/fido"/>
+        <source-file src="src/android/MessageCodes.kt" target-dir="app/src/main/kotlin/com/fkmit/fido"/>
         <source-file src="src/android/NFCDiscoveryDispatcher.kt" target-dir="app/src/main/kotlin/com/fkmit/fido"/>
         <source-file src="src/android/RequestHandlers.kt" target-dir="app/src/main/kotlin/com/fkmit/fido"/>
         <source-file src="src/android/ResultDispatcher.kt" target-dir="app/src/main/kotlin/com/fkmit/fido"/>
-        <source-file src="src/android/StatusCodes.kt" target-dir="app/src/main/kotlin/com/fkmit/fido"/>
         <source-file src="src/android/Util.kt" target-dir="app/src/main/kotlin/com/fkmit/fido"/>
 
     </platform>
