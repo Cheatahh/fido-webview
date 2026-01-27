@@ -76,8 +76,8 @@
         <source-file src="src/android/ResultDispatcher.kt" target-dir="app/src/main/kotlin/com/fkmit/fido"/>
         <source-file src="src/android/Util.kt" target-dir="app/src/main/kotlin/com/fkmit/fido"/>
 
-        <resource-file src="src/android/fido_webview.xml" target="app/src/main/res/layout/fido_webview.xml" />
-        <resource-file src="src/android/fido_webview_unsupported.xml" target="app/src/main/res/layout/fido_webview_unsupported.xml" />
+        <source-file src="src/android/fido_webview.xml" target="app/src/main/res/layout/fido_webview.xml" />
+        <source-file src="src/android/fido_webview_unsupported.xml" target="app/src/main/res/layout/fido_webview_unsupported.xml" />
 
     </platform>
 
