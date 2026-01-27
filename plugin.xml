@@ -24,6 +24,18 @@
             src="com.yubico.yubikit:android:3.0.0"
             type="gradle" />
 
+        <framework
+            src="androidx.webkit:webkit:1.15.0"
+            type="gradle" />
+
+        <framework
+            src="androidx.credentials:credentials:1.6.0-rc01"
+            type="gradle" />
+
+        <framework
+            src="androidx.credentials:credentials-play-services-auth:1.6.0-rc01"
+            type="gradle" />
+
         <config-file target="AndroidManifest.xml" parent="/*">
             <uses-permission android:name="android.permission.NFC" />
         </config-file>
