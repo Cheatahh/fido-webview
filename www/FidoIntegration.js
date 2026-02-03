@@ -21,14 +21,17 @@ const FidoIntegration = {
         SIGNAL_DEVICE_DISCOVERED: 0x3002, // payload: null
         SIGNAL_DEVICE_LOST: 0x3003, // payload: null
     },
-    getAssertion: function(clientData /*json string*/, userPin /*string*/, rpId /*url string*/, userId /*base64 string*/, onMessage /*callback (code, payload) -> void*/) {
-        runExecCatching(onMessage, 'getAssertion', [clientData, userPin, rpId, userId]);
+    getAssertion: function(
+        clientData /*string (json)*/,
+        userPin /*string | null*/,
+        rpId /*string (url)*/,
+        userId /*string (base64) | null*/,
+        onMessage /*callback (code, payload) -> void*/
+    ) {
+        runExecCatching(onMessage, 'getAssertion', [clientData, rpId, userPin, userId]);
     },
     reset: function(onMessage /*callback (code, payload) -> void*/) {
         runExecCatching(onMessage, 'reset', []);
-    },
-    openWebview: function(onMessage /*callback (code, payload) -> void*/) {
-        runExecCatching(onMessage, 'openWebview', []);
     }
 };
 
