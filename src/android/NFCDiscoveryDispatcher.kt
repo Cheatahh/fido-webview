@@ -36,13 +36,13 @@ interface NFCDiscoveryDispatcher {
         }.onSuccess { connection ->
             runWithCatching(dispatch) { connection.use(callback) }
         }.onFailure {
-            runWithCatching(dispatch) {
-                stopDeviceDiscovery()
-                startDeviceDiscovery(InvokeOnce { device ->
-                    dispatch.sendMessage(MessageCodes.SignalDeviceDiscovered, null)
+            stopDeviceDiscovery()
+            startDeviceDiscovery(InvokeOnce { device ->
+                dispatch.sendMessage(MessageCodes.SignalDeviceDiscovered, null)
+                runWithCatching(dispatch) {
                     device.openConnection(SmartCardConnection::class.java).use(callback)
-                })
-            }
+                }
+            })
         }
     }
 
