@@ -15,13 +15,14 @@ function runExecCatching(onMessage, action, parameters) {
 const FidoIntegration = {
     StatusCodes: {
         SUCCESS: 0x1000, // payload: result
-        SUCCESS_USER_CHOICE_REQUIRED: 0x1001, // payload: [{name,id}]
         FAILURE: 0x2000, // payload: exception
         FAILURE_INVALID_PIN: 0x2001, // payload: null
-        FAILURE_UNSUPPORTED_DEVICE: 0x2002, // payload: null
+        FAILURE_DEVICE_UNSUPPORTED: 0x2002, // payload: null
+        FAILURE_DEVICE_LOST: 0x2003, // payload: null
+        FAILURE_NO_CREDENTIALS: 0x2004, // payload: null
+        FAILURE_TOO_MANY_CREDENTIALS: 0x2005, // payload: [{name :string, id: string}]
         SIGNAL_PROGRESS_UPDATE: 0x3001, // payload: float
-        SIGNAL_DEVICE_DISCOVERED: 0x3002, // payload: null
-        SIGNAL_DEVICE_LOST: 0x3003, // payload: null
+        SIGNAL_DEVICE_DISCOVERED: 0x3002 // payload: null
     },
     getAssertion: function(
         clientData /*string (json)*/,

@@ -50,15 +50,7 @@ object RequestHandlers {
                     Log.e("FIDO", "getting client pin")
                     val clientPin = ClientPin(session, pinProtocol)
                     Log.e("FIDO", "getting uv token")
-                    var pinUvAuthToken = try {
-                        clientPin.getPinToken(userPin, ClientPin.PIN_PERMISSION_CM, null)
-                    } catch (_: InvalidPinException) {
-                        dispatch.sendMessage(MessageCodes.FailureInvalidPin, null)
-                        return@ctx
-                    } catch (_: CtapException) {
-                        dispatch.sendMessage(MessageCodes.FailureUnsupportedDevice, null)
-                        return@ctx
-                    }
+                    var pinUvAuthToken = clientPin.getPinToken(userPin, ClientPin.PIN_PERMISSION_CM, null)
                     Log.e("FIDO", "token: $pinUvAuthToken")
                     dispatch.sendMessage(MessageCodes.SignalProgressUpdate, 1f / 3f)
                     Log.e("FIDO", "getting credentials")
@@ -69,7 +61,7 @@ object RequestHandlers {
                         "No matching credential found."
                     }
                     if(credentials.size > 1) {
-                        dispatch.sendMessage(MessageCodes.SuccessUserChoiceRequired, Fido.encodeCredentialList(credentials))
+                        dispatch.sendMessage(MessageCodes.FailureTooManyCredentials, Fido.encodeCredentialList(credentials))
                         return@ctx
                     }
                     Log.e("FIDO", "credentials got: ${credentials.size}")

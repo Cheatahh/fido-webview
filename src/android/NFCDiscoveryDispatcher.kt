@@ -1,8 +1,9 @@
 package com.fkmit.fido
 
 import android.nfc.TagLostException
-import android.util.Log
 import com.yubico.yubikit.core.YubiKeyDevice
+import com.yubico.yubikit.core.application.InvalidPinException
+import com.yubico.yubikit.core.fido.CtapException
 import com.yubico.yubikit.core.smartcard.SmartCardConnection
 
 interface NFCDiscoveryDispatcher {
@@ -13,6 +14,19 @@ interface NFCDiscoveryDispatcher {
 
     fun stopDeviceDiscovery()
 
+    private fun runWithCatching(dispatch: ResultDispatcher, block: () -> Unit) {
+        try {
+            block()
+        } catch (_: TagLostException) {
+            currentNFCDevice = null
+            dispatch.sendMessage(MessageCodes.FailureDeviceLost, null)
+        } catch (_: InvalidPinException) {
+            dispatch.sendMessage(MessageCodes.FailureInvalidPin, null)
+        } catch (e: CtapException) {
+            dispatch.sendMessage(if(e.ctapError == CtapException.ERR_NO_CREDENTIALS) MessageCodes.FailureNoCredentials else MessageCodes.FailureUnsupportedDevice, null)
+        }
+    }
+
     fun useDeviceConnection(dispatch: ResultDispatcher, callback: (SmartCardConnection) -> Unit) {
         runCatching {
             requireNotNull(currentNFCDevice).let {
@@ -20,22 +34,14 @@ interface NFCDiscoveryDispatcher {
                 it.openConnection(SmartCardConnection::class.java)
             }
         }.onSuccess { connection ->
-            try {
-                connection.use(callback)
-            } catch (_: TagLostException) {
-                currentNFCDevice = null
-                dispatch.sendMessage(MessageCodes.SignalDeviceLost, null)
-            }
+            runWithCatching(dispatch) { connection.use(callback) }
         }.onFailure {
-            try {
+            runWithCatching(dispatch) {
                 stopDeviceDiscovery()
                 startDeviceDiscovery(InvokeOnce { device ->
                     dispatch.sendMessage(MessageCodes.SignalDeviceDiscovered, null)
                     device.openConnection(SmartCardConnection::class.java).use(callback)
                 })
-            } catch (_: TagLostException) {
-                currentNFCDevice = null
-                dispatch.sendMessage(MessageCodes.SignalDeviceLost, null)
             }
         }
     }
