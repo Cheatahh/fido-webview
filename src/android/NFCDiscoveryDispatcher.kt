@@ -1,5 +1,6 @@
 package com.fkmit.fido
 
+import android.util.Log
 import com.yubico.yubikit.core.YubiKeyDevice
 import com.yubico.yubikit.core.smartcard.SmartCardConnection
 
