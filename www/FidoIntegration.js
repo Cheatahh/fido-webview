@@ -5,10 +5,10 @@ function runExecCatching(onMessage, action, parameters) {
         exec((result) => {
             onMessage(result.statusCode, result.payload);
         }, (err) => {
-            onMessage(this.StatusCodes.FAILURE, err);
+            onMessage(0x2000, err);
         }, 'FidoIntegration', action, parameters);
     } catch(err) {
-        onMessage(this.StatusCodes.FAILURE, err);
+        onMessage(0x2000, err);
     }
 }
 

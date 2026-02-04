@@ -51,26 +51,31 @@ object RequestHandlers {
                     val clientPin = ClientPin(session, pinProtocol)
                     Log.e("FIDO", "getting uv token")
                     var pinUvAuthToken = clientPin.getPinToken(userPin, ClientPin.PIN_PERMISSION_CM, null)
-                    Log.e("FIDO", "token: $pinUvAuthToken")
+                    Log.e("FIDO", "token: ${pinUvAuthToken.contentToString()}")
                     dispatch.sendMessage(MessageCodes.SignalProgressUpdate, 1f / 3f)
                     Log.e("FIDO", "getting credentials")
-                    val credentials = Fido.getCredentials(session, clientPin, pinUvAuthToken).filter {
-                        it.rpId == rpId && it.credentialType == "public-key" && (userId === null || it.userId contentEquals userId)
+                    val credentials = runCatching {
+                        Fido.getCredentials(session, clientPin, pinUvAuthToken).filter {
+                            it.rpId == rpId && it.credentialType == "public-key" && (userId === null || it.userId contentEquals userId)
+                        }
+                    }.onSuccess { credentials ->
+                        Log.e("FIDO", "credentials got: ${credentials.size}")
+                        require(credentials.isNotEmpty()) {
+                            "No matching credential found."
+                        }
+                        if(credentials.size > 1) {
+                            dispatch.sendMessage(MessageCodes.FailureTooManyCredentials, Fido.encodeCredentialList(credentials))
+                            return@ctx
+                        }
+                    }.onFailure {
+                        Log.e("FIDO", "credential manager not supported")
                     }
-                    require(credentials.isNotEmpty()) {
-                        "No matching credential found."
-                    }
-                    if(credentials.size > 1) {
-                        dispatch.sendMessage(MessageCodes.FailureTooManyCredentials, Fido.encodeCredentialList(credentials))
-                        return@ctx
-                    }
-                    Log.e("FIDO", "credentials got: ${credentials.size}")
                     dispatch.sendMessage(MessageCodes.SignalProgressUpdate, 2f / 3f)
                     Log.e("FIDO", "getting uv token")
                     pinUvAuthToken = clientPin.getPinToken(userPin, ClientPin.PIN_PERMISSION_GA, rpId)
                     Log.e("FIDO", "token: $pinUvAuthToken")
                     Log.e("FIDO", "getting assertion")
-                    val assertion = Fido.getAssertions(session, pinProtocol, pinUvAuthToken, credentials.first(), rpId, clientData)
+                    val assertion = Fido.getAssertions(session, pinProtocol, pinUvAuthToken, credentials.getOrNull()?.firstOrNull(), rpId, clientData)
                     Log.e("FIDO", "assertions got: ${assertion.size}")
                     dispatch.sendMessage(MessageCodes.SignalProgressUpdate, 3f / 3f)
                     val result = Fido.encodePublicKeyCredentials(assertion, clientData)

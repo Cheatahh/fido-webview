@@ -26,7 +26,10 @@ interface NFCDiscoveryDispatcher {
             dispatch.sendMessage(MessageCodes.FailureInvalidPin, null)
         } catch (e: CtapException) {
             dispatch.sendMessage(if(e.ctapError == CtapException.ERR_NO_CREDENTIALS) MessageCodes.FailureNoCredentials else MessageCodes.FailureUnsupportedDevice, null)
+        } catch (e: Exception) {
+            dispatch.sendMessage(MessageCodes.Failure, e.message)
         }
+        Log.e("DEBUG", "runWithCatching2")
     }
 
     fun useDeviceConnection(dispatch: ResultDispatcher, callback: (SmartCardConnection) -> Unit) {

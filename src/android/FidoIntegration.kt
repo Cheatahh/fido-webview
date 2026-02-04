@@ -56,7 +56,7 @@ class FidoIntegration : CordovaPlugin(), NFCDiscoveryDispatcher {
                 else -> return false
             }
         }.onFailure { error ->
-            dispatch.sendMessage(MessageCodes.Failure, error)
+            dispatch.sendMessage(MessageCodes.Failure, error.message)
         }
         return true
     }
