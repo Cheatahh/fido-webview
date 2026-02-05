@@ -23,6 +23,7 @@ object RequestHandlers {
         val rpId = requireNotNull(args.optString(1).takeIf(String::isNotBlank)) {
             "Parameter <RP_ID> must be a string."
         }
+        Log.e("FIDO", "$rpId;$clientData")
         val userPin = args.optString(2).takeIf(String::isNotBlank)?.toCharArray()
         val userId = args.optString(3).takeIf(String::isNotBlank)?.decodeBase64()
 
@@ -76,7 +77,7 @@ object RequestHandlers {
                     dispatch.sendMessage(MessageCodes.SignalProgressUpdate, 2f / 3f)
                     Log.e("FIDO", "getting uv token")
                     pinUvAuthToken = clientPin.getPinToken(userPin, ClientPin.PIN_PERMISSION_GA, rpId)
-                    Log.e("FIDO", "token: $pinUvAuthToken")
+                    Log.e("FIDO", "token: ${pinUvAuthToken.contentToString()}")
                     Log.e("FIDO", "getting assertion")
                     val assertion = Fido.getAssertions(session, pinProtocol, pinUvAuthToken, credentials.getOrNull()?.firstOrNull(), rpId, clientData)
                     Log.e("FIDO", "assertions got: ${assertion.size}")

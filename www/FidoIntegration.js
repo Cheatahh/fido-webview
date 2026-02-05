@@ -30,7 +30,7 @@ function runExecCatching(onMessage, action, parameters) {
 const FidoIntegration = {
     StatusCodes: {
         SUCCESS: 0x1000, // payload: result
-        FAILURE: 0x2000, // payload: string (exception)
+        FAILURE: 0x2000, // payload: string (exception) | null
         FAILURE_INVALID_PIN: 0x2001, // payload: null
         FAILURE_DEVICE_UNSUPPORTED: 0x2002, // payload: null
         FAILURE_DEVICE_LOST: 0x2003, // payload: null
