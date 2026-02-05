@@ -28,13 +28,10 @@ object Fido {
      * Encode a list of `AssertionData` into a WebAuthn-style JSON array string.
      *
      * Each assertion is converted into an object containing:
-     *  - `id`: Base64 URL-safe encoded credential id
-     *  - `type`: credential type (always `"public-key"` here)
-     *  - `rawId`: `id` as an array of integer bytes
-     *  - `response`: object containing `clientDataJSON`, `authenticatorData`, `signature`, `userHandle`
-     *
-     * Byte arrays are converted to unsigned JSON arrays (via `toUByteArray().toJsonArray()`)
-     * and `clientData` is encoded from the provided string.
+     *  - `id`
+     *  - `authenticatorData`
+     *  - `clientDataJSON`
+     *  - `signature`
      *
      * @param assertions the list of `Ctap2Session.AssertionData` to encode
      * @param clientData the JSON clientData string (will be included as `clientDataJSON`)
@@ -44,17 +41,21 @@ object Fido {
         log { "-- encodePublicKeyCredentials --" }
         assertions.forEach {
             val credentialId = it.credential!!["id"] as ByteArray
-            val userId = it.user!!["id"] as ByteArray
+            //val userId = it.user!!["id"] as ByteArray
             put(JSONObject().apply {
                 put("id", credentialId.encodeBase64Url())
-                put("type", "public-key")
-                put("rawId", credentialId.toUByteArray().toJsonArray())
-                put("response", JSONObject().apply {
+                put("authenticatorData", it.authenticatorData.encodeBase64Url())
+                put("clientDataJSON", clientData.encodeToByteArray().encodeBase64Url())
+                put("signature", it.signature.encodeBase64Url())
+                //put("id", credentialId.encodeBase64Url())
+                //put("type", "public-key")
+                //put("rawId", credentialId.toUByteArray().toJsonArray())
+                /*put("response", JSONObject().apply {
                     put("clientDataJSON", clientData.encodeToByteArray().toUByteArray().toJsonArray())
                     put("authenticatorData", it.authenticatorData.toUByteArray().toJsonArray())
                     put("signature", it.signature.toUByteArray().toJsonArray())
                     put("userHandle", userId.toUByteArray().toJsonArray())
-                })
+                })*/
             })
         }
         log { "-> ${toString()}" }
