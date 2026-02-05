@@ -16,32 +16,75 @@ import org.json.JSONArray
 
 private const val NFC_TIMEOUT = 5000
 
+/**
+ * Cordova plugin integration that manages YubiKit NFC and USB discovery and
+ * exposes FIDO operations to the Cordova layer.
+ *
+ * Implements [NFCDiscoveryDispatcher] to provide a centralized mechanism for
+ * discovering `YubiKeyDevice` instances and opening `SmartCardConnection`s.
+ *
+ * Discovery is managed via [YubiKitManager] backed by a [UsbYubiKeyManager] and
+ * an [NfcYubiKeyManager] with a small inline [NfcDispatcher] implementation.
+ */
 class FidoIntegration : CordovaPlugin(), NFCDiscoveryDispatcher {
 
-    private var nfcYubikeyManager: NfcYubiKeyManager? = null
-    private var yubikitManager: YubiKitManager? = null
-    private var yubikitDiscoveryCallback: ((YubiKeyDevice) -> Unit)? = null
-    override var currentNFCDevice: YubiKeyDevice? = null
-
-    private fun ensureYubikitInitialized() {
-        if(nfcYubikeyManager === null)
-            nfcYubikeyManager = NfcYubiKeyManager(cordova.activity, object : NfcDispatcher {
-                private var nfcAdapter: NfcAdapter? = null
-                private var nfcReaderDispatcher: NfcReaderDispatcher? = null
-                override fun enable(activity: Activity, nfcConfiguration: NfcConfiguration, handler: NfcDispatcher.OnTagHandler) {
-                    nfcAdapter = NfcAdapter.getDefaultAdapter(activity)
-                    nfcReaderDispatcher = NfcReaderDispatcher(nfcAdapter!!)
-                    nfcReaderDispatcher?.enable(activity, nfcConfiguration, handler)
-                }
-                override fun disable(activity: Activity) {
-                    nfcReaderDispatcher?.disable(activity)
-                }
-            })
-        if(yubikitManager === null)
-            yubikitManager = YubiKitManager(UsbYubiKeyManager(cordova.activity), nfcYubikeyManager)
+    /**
+     * Lazily-initialized manager for NFC-backed YubiKey access.
+     */
+    private val nfcYubikeyManager by lazy {
+        NfcYubiKeyManager(cordova.activity, object : NfcDispatcher {
+            private var nfcAdapter: NfcAdapter? = null
+            private var nfcReaderDispatcher: NfcReaderDispatcher? = null
+            override fun enable(activity: Activity, nfcConfiguration: NfcConfiguration, handler: NfcDispatcher.OnTagHandler) {
+                nfcAdapter = NfcAdapter.getDefaultAdapter(activity)
+                nfcReaderDispatcher = NfcReaderDispatcher(nfcAdapter!!)
+                nfcReaderDispatcher?.enable(activity, nfcConfiguration, handler)
+            }
+            override fun disable(activity: Activity) {
+                nfcReaderDispatcher?.disable(activity)
+            }
+        }).also { log { "nfcYubikeyManager initialized" } }
     }
 
+    /**
+     * Lazily-initialized top-level YubiKit manager that coordinates USB and NFC discovery.
+     */
+    private val yubikitManager by lazy {
+        YubiKitManager(UsbYubiKeyManager(cordova.activity), nfcYubikeyManager)
+            .also { log { "yubikitManager initialized" } }
+    }
+
+    /**
+     * Optional discovery callback currently registered by callers. Stored so discovery
+     * can be restarted when the activity lifecycle changes.
+     */
+    private var yubikitDiscoveryCallback: ((YubiKeyDevice) -> Unit)? = null
+
+    /**
+     * The most recently discovered `YubiKeyDevice`, or `null` when none is available.
+     * This property fulfills the [NFCDiscoveryDispatcher] contract and is updated by
+     * `startDeviceDiscovery` and discovery callbacks.
+     */
+    override var currentNFCDevice: YubiKeyDevice? = null
+
+    /**
+     * Cordova action dispatcher.
+     *
+     * Recognized actions:
+     *  - `"getAssertion"`: delegates to [RequestHandlers.getAssertion]
+     *  - `"nfcDevNull"`: starts discovery and replies with success (no-op device)
+     *  - `"reset"`: stops discovery and clears the cached device
+     *
+     * Errors thrown during action handling are caught and reported to the provided
+     * [callback] via a [ResultDispatcher].
+     *
+     * @param action the action name invoked from JavaScript
+     * @param args the JSON array of arguments
+     * @param callback the Cordova [CallbackContext] used to return results
+     * @return `true` for handled actions, `false` otherwise
+     */
     override fun execute(action: String, args: JSONArray, callback: CallbackContext): Boolean {
+        log { "-- execute (action = $action, args = $args) --" }
         val dispatch = ResultDispatcher(callback)
         runCatching {
             when(action) {
@@ -65,34 +108,67 @@ class FidoIntegration : CordovaPlugin(), NFCDiscoveryDispatcher {
         return true
     }
 
+    /**
+     * Start discovery for YubiKey devices and deliver discovered devices to [callback].
+     *
+     * This implementation:
+     *  - Ensures YubiKit is initialized
+     *  - Stops any previous discovery
+     *  - Stores the provided [callback] so discovery can be restarted on lifecycle changes
+     *  - Starts both NFC and USB discovery. NFC discovery uses a timeout defined by [NFC_TIMEOUT].
+     *
+     * This method is synchronized to prevent concurrent discovery state changes.
+     *
+     * @param callback function invoked for each discovered [YubiKeyDevice]
+     */
     override fun startDeviceDiscovery(callback: (YubiKeyDevice) -> Unit) {
+        log { "-- startDeviceDiscovery --" }
         synchronized(this) {
-            ensureYubikitInitialized()
             stopDeviceDiscovery()
             yubikitDiscoveryCallback = callback
-            yubikitManager?.startNfcDiscovery(NfcConfiguration().timeout(NFC_TIMEOUT), cordova.activity) { device ->
+            yubikitManager.startNfcDiscovery(NfcConfiguration().timeout(NFC_TIMEOUT), cordova.activity) { device ->
                 callback(device)
             }
-            yubikitManager?.startUsbDiscovery(UsbConfiguration()) { device ->
+            yubikitManager.startUsbDiscovery(UsbConfiguration()) { device ->
                 callback(device)
             }
         }
     }
 
+    /**
+     * Stop any ongoing NFC or USB discovery and clear the stored discovery callback.
+     *
+     * This method is synchronized to prevent concurrent discovery state changes.
+     */
     override fun stopDeviceDiscovery() {
+        log { "-- stopDeviceDiscovery --" }
         synchronized(this) {
             yubikitDiscoveryCallback = null
-            yubikitManager?.stopNfcDiscovery(cordova.activity)
-            yubikitManager?.stopUsbDiscovery()
+            yubikitManager.stopNfcDiscovery(cordova.activity)
+            yubikitManager.stopUsbDiscovery()
         }
     }
 
+    /**
+     * Cordova lifecycle hook. If a discovery callback is currently registered,
+     * restart discovery when the activity resumes.
+     *
+     * @param multitasking unused; required by the Cordova API
+     */
     override fun onResume(multitasking: Boolean) {
+        log { "-- onResume --" }
         yubikitDiscoveryCallback?.apply(::startDeviceDiscovery)
         super.onResume(multitasking)
     }
 
+    /**
+     * Cordova lifecycle hook. Temporarily stops discovery while preserving the
+     * previously-registered callback so discovery can be resumed in [onResume].
+     *
+     * @param multitasking unused; required by the Cordova API
+     */
     override fun onPause(multitasking: Boolean) {
+        log { "-- onPause --" }
         yubikitDiscoveryCallback.also { swap ->
             stopDeviceDiscovery()
             yubikitDiscoveryCallback = swap
