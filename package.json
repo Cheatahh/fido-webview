@@ -1,9 +1,9 @@
 {
-    "name": "fkmit-fido-webview-plugin",
+    "name": "cordova-fido-nfc",
     "version": "0.0.1",
-    "description": "Fido support for Android Webviews.",
+    "description": "Fido support for Android.",
     "cordova": {
-        "id": "fkmit-fido-webview-plugin",
+        "id": "cordova-fido-nfc",
         "platforms": ["android"]
     },
     "keywords": [],

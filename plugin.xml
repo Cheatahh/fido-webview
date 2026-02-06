@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<plugin id="fkmit-fido-webview-plugin" version="1.0.0"
+<plugin id="cordova-fido-nfc" version="1.0.0"
         xmlns="http://apache.org/cordova/ns/plugins/1.0"
         xmlns:android="http://schemas.android.com/apk/res/android">
 
     <name>Fido Integration Plugin</name>
-    <description>Fido support for Android Webviews.</description>
+    <description>Fido support for Android.</description>
 
     <engines>
         <engine name="cordova" version=">=12.0.0"/>
@@ -42,12 +42,7 @@
 
         <config-file target="AndroidManifest.xml" parent="/*">
             <uses-permission android:name="android.permission.NFC" />
-        </config-file>
-
-        <config-file target="AndroidManifest.xml" parent="/*">
-            <uses-feature
-                android:name="android.hardware.nfc"
-                android:required="true" />
+            <uses-feature android:name="android.hardware.nfc" android:required="false" />
         </config-file>
 
         <config-file target="res/xml/config.xml" parent="/*">
